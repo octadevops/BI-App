@@ -12,7 +12,6 @@ import {
 import { DataTable } from "primereact/datatable";
 import { fetchLiveStockData, fetchLocations } from "../functions/APIServices";
 import { Column } from "primereact/column";
-import { Calendar } from "primereact/calendar";
 
 ChartJS.register(
   CategoryScale,
@@ -74,22 +73,6 @@ const Chart = ({ initialLocation }) => {
 
   return (
     <div>
-      {/* <div className="flex gap-4">
-        <div className="flex gap-2 items-center">
-          <label>Date:</label>
-          <Calendar
-            value={dates}
-            onChange={(e) => setDates(e.value)}
-            selectionMode="range"
-            readOnlyInput
-            hideOnRangeSelection
-            placeholder="Select Date Range"
-            panelClassName="p-2 bg-gray-100"
-            inputClassName="p-1 rounded"
-          />
-        </div>
-      </div> */}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
         <div>
           <DataTable
