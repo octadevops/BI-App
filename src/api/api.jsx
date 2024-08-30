@@ -16,7 +16,18 @@ const REPORTS = {
   Live: "https://stk.nolimitfashion.com/api/Report/GetReport", // Live;
   Development: "https://localhost:44301/api/Report/GetReport", // Development;
 };
+const FOOTFALLDATA = {
+  Live: "https://stk.nolimitfashion.com/api/Report/GetReport", // Live;
+  Development: "https://localhost:44301/api/Reports/GetFootFallData", // Development;
+};
 
 const getApiUrl = (apiObject) => apiObject[ENVIRONMENT];
 
-export { LOGIN_API, LIVE_STOCK, FETCH_LOCATION, REPORTS, getApiUrl };
+export {
+  LOGIN_API,
+  LIVE_STOCK,
+  FETCH_LOCATION,
+  REPORTS,
+  FOOTFALLDATA,
+  getApiUrl,
+};

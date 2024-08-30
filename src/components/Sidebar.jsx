@@ -19,7 +19,7 @@ const Sidebar = () => {
     setIsDashboardOpen(!isDashboardOpen);
   };
   return (
-    <div className="h-screen hidden md:flex flex-col w-64 bg-gray-800 text-white sticky top-0 z-50">
+    <div className="h-screen hidden md:flex flex-col w-60 bg-gray-800 text-white sticky top-0 z-50">
       <div className="flex items-center justify-center h-16 shadow-md">
         <div className="flex items-center">
           <Link to="/" smooth={true} duration={500}>
