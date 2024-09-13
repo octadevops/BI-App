@@ -9,7 +9,7 @@ const LIVE_STOCK = {
   Development: "https://localhost:44301/api/reports/location-wise", // Development;
 };
 const FETCH_LOCATION = {
-  Live: "https://stk.nolimitfashion.com/api/Location/location", // Live;
+  Live: "https://apx.nolimit.lk/api/Location/location", // Live;
   Development: "https://localhost:44301/api/Location/location", // Development;
 };
 const REPORTS = {
@@ -17,7 +17,7 @@ const REPORTS = {
   Development: "https://localhost:44301/api/Report/GetReport", // Development;
 };
 const FOOTFALLDATA = {
-  Live: "https://stk.nolimitfashion.com/api/Report/GetReport", // Live;
+  Live: "https://apx.nolimit.lk/api/Reports/GetFootFallData", // Live;
   Development: "https://localhost:44301/api/Reports/GetFootFallData", // Development;
 };
 

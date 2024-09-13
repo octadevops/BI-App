@@ -3,11 +3,7 @@ import GridPanel from "../components/GridPanel";
 import { useState, useEffect } from "react";
 import { Chart } from "primereact/chart";
 import FilterComp from "../components/FilterComp";
-import {
-  fetchLocations,
-  fetchFootfallData,
-  fetchConversionData,
-} from "../functions/APIServices";
+import { fetchLocations, fetchFootfallData } from "../functions/APIServices";
 import { MEASUREMENTS } from "../constants/Constants";
 import { HashLoader } from "react-spinners";
 import {
@@ -18,9 +14,11 @@ import {
 const DFootfall = () => {
   const [chartDataHourly, setChartDataHourly] = useState({});
   const [chartDataDaily, setChartDataDaily] = useState({});
+  const [chartDataWeekly, setChartDataWeekly] = useState({});
+  const [chartDataMonthly, setChartDataMonthly] = useState({});
   const [conversionChartData, setConversionChartData] = useState({});
   const [chartOptions, setChartOptions] = useState({});
-  const [filters, setFilters] = useState({ dateRange: [], location: null }); // Remove 'All Locations' option
+  const [filters, setFilters] = useState({ dateRange: [], location: 0 }); // Default location to "All Locations"
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -32,7 +30,7 @@ const DFootfall = () => {
         label: loc.locationName,
         value: loc.locationID,
       }));
-      setLocations(locationOptions); // No need to add 'All Locations'
+      setLocations([{ label: "All Locations", value: 0 }, ...locationOptions]);
     };
     loadLocations();
   }, []);
@@ -45,8 +43,14 @@ const DFootfall = () => {
     )}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
+  const getCurrentTimeMinus24Hours = () => {
+    const currentTime = new Date();
+    currentTime.setHours(currentTime.getHours() - 24);
+    return currentTime;
+  };
+
   useEffect(() => {
-    if (filters.dateRange.length > 0 && filters.location) {
+    if (filters.dateRange.length > 0) {
       fetchData();
     }
   }, [filters]);
@@ -58,36 +62,54 @@ const DFootfall = () => {
       const formattedStartDate = formatDate(startDate);
       const formattedEndDate = formatDate(endDate);
 
-      let hourlyData = [];
-      let dailyData = [];
-      let conversionData = [];
+      let hourlyData, dailyData;
 
-      // Fetch data for the selected location
-      const isSingleDaySelected = startDate === endDate;
-      if (isSingleDaySelected) {
+      if (filters.location === 0) {
+        // Fetch data for all locations
         hourlyData = await fetchFootfallData(
           formattedStartDate,
           formattedEndDate,
+          filters.location, // All locations
+          MEASUREMENTS.HOURLY.value
+        );
+        dailyData = await fetchFootfallData(
+          formattedStartDate,
+          formattedEndDate,
+          filters.location, // All locations
+          MEASUREMENTS.DAILY.value
+        );
+      } else {
+        // Fetch data for specific location
+        const currentDate = new Date();
+        const past24HoursDate = new Date(
+          currentDate.getTime() - 24 * 60 * 60 * 1000
+        );
+
+        // Format dates for hourly data
+        const formattedCurrentDate = formatDate(currentDate);
+        const formattedPast24HoursDate = formatDate(past24HoursDate);
+
+        // Fetch hourly data for past 24 hours for specific location
+        hourlyData = await fetchFootfallData(
+          formattedPast24HoursDate,
+          formattedCurrentDate,
           filters.location,
           MEASUREMENTS.HOURLY.value
         );
-      }
-      dailyData = await fetchFootfallData(
-        formattedStartDate,
-        formattedEndDate,
-        filters.location,
-        MEASUREMENTS.DAILY.value
-      );
-      conversionData = await fetchConversionData(
-        formattedStartDate,
-        formattedEndDate,
-        filters.location
-      );
 
-      // Update charts with fetched data
+        // Fetch daily data for specific location in the selected date range
+        dailyData = await fetchFootfallData(
+          formattedStartDate,
+          formattedEndDate,
+          filters.location,
+          MEASUREMENTS.DAILY.value
+        );
+      }
+
+      // Update charts based on the data
       updateChartData(hourlyData, MEASUREMENTS.HOURLY, setChartDataHourly);
       updateChartData(dailyData, MEASUREMENTS.DAILY, setChartDataDaily);
-      updateConversionChartData(conversionData);
+      updateConversionChartData(dailyData); // Use daily data for conversion rate calculation
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -97,21 +119,36 @@ const DFootfall = () => {
 
   const updateChartData = (data, measurementType, setChartData) => {
     const documentStyle = getComputedStyle(document.documentElement);
+
     const labels = [];
     const footfallCounts = [];
     const billCounts = [];
 
     data.forEach((item) => {
-      // Use date for specific location filter
-      const dateObj = new Date(item.DateLabel);
-      const label = isNaN(dateObj)
-        ? "Invalid Date/Time"
-        : measurementType.value === MEASUREMENTS.HOURLY.value
-        ? dateObj.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : dateObj.toLocaleDateString();
+      let label;
+      switch (measurementType.value) {
+        case MEASUREMENTS.HOURLY.value:
+          label =
+            filters.location === 0
+              ? item.LocationName
+              : new Date(item.DateNTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+          break;
+        case MEASUREMENTS.DAILY.value:
+          label = new Date(item.DateNTime).toLocaleDateString();
+          break;
+        case MEASUREMENTS.WEEKLY.value:
+          label = `Week ${item.Week} (${item.Year})`;
+          break;
+        case MEASUREMENTS.MONTHLY.value:
+          label = `${item.Month} ${item.Year}`;
+          break;
+        default:
+          label = "Unknown";
+          break;
+      }
 
       labels.push(label);
       footfallCounts.push(item.FootFall || item.footfallCount || 0);
@@ -141,29 +178,16 @@ const DFootfall = () => {
 
   const updateConversionChartData = (data) => {
     const documentStyle = getComputedStyle(document.documentElement);
-
-    // Sort data by DateNTime field
-    data.sort((a, b) => new Date(a.DateNTime) - new Date(b.DateNTime));
-
     const labels = [];
     const conversionRates = [];
 
     data.forEach((item) => {
-      // Parse the DateNTime from the API response
-      const dateObj = new Date(item.DateNTime); // Assuming DateNTime is the correct field name
-      const formattedDate = `${String(dateObj.getDate()).padStart(
-        2,
-        "0"
-      )}-${String(dateObj.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}-${dateObj.getFullYear()}`; // Format to "DD-MM-YYYY"
-
-      labels.push(formattedDate);
-
-      // Conversion rate data
-      const conversionRate = item.FootFallConversionRate || 0;
-      conversionRates.push(parseFloat(conversionRate.toFixed(2)));
+      if (filters.location === 0 || item.LocationID === filters.location) {
+        labels.push(item.LocationName);
+        const conversionRate =
+          item.FootFall > 0 ? (item.Bills / item.FootFall) * 100 : 0;
+        conversionRates.push(conversionRate.toFixed(2));
+      }
     });
 
     const conversionChartData = {
@@ -173,10 +197,7 @@ const DFootfall = () => {
           type: "line",
           label: "Conversion Rate (%)",
           borderColor: documentStyle.getPropertyValue("--red-500"),
-          backgroundColor: documentStyle.getPropertyValue("--red-200"),
           data: conversionRates,
-          fill: false,
-          tension: 0.3,
         },
       ],
     };
@@ -216,7 +237,6 @@ const DFootfall = () => {
               )
             }
             onClick={toggleFullScreen}
-            className="pl-2 hover:scale-150 duration-300"
           />
         </div>
         {loading ? (
@@ -227,49 +247,23 @@ const DFootfall = () => {
           <div
             className={
               isFullScreen
-                ? "grid grid-cols-1 gap-2"
-                : "md:grid grid-cols-1 gap-3 p-5 lg:grid lg:grid-cols-2 lg:gap-4"
+                ? "grid grid-cols-1 gap-4"
+                : "flex flex-col w-full gap-6"
             }
           >
-            {filters.dateRange.length === 1 && (
-              <Chart
-                type="bar"
-                data={chartDataHourly}
-                options={chartOptions}
-                title="Hourly Data"
-              />
-            )}
             <Chart
               type="bar"
-              data={chartDataDaily}
+              data={chartDataHourly}
               options={chartOptions}
-              title="Footfall and Bill Count by Date"
+              title="Hourly Data"
             />
+            <Chart type="bar" data={chartDataDaily} options={chartOptions} />
+            <Chart type="bar" data={chartDataWeekly} options={chartOptions} />
+            <Chart type="bar" data={chartDataMonthly} options={chartOptions} />
             <Chart
               type="line"
               data={conversionChartData}
-              options={{
-                scales: {
-                  x: {
-                    title: {
-                      display: true,
-                      text: "Date",
-                    },
-                  },
-                  y: {
-                    title: {
-                      display: true,
-                      text: "Conversion Rate (%)",
-                    },
-                  },
-                },
-                plugins: {
-                  legend: {
-                    display: true,
-                    position: "top",
-                  },
-                },
-              }}
+              options={chartOptions}
             />
           </div>
         )}

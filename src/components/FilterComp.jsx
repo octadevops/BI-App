@@ -32,7 +32,7 @@ const FilterComp = ({
     const loadLocations = async () => {
       const fetchedLocations = await fetchLocations();
       setLocations([
-        { label: "All Locations", value: null }, // Add All Locations option
+        // { label: "All Locations", value: null }, // Add All Locations option
         ...fetchedLocations.map((loc) => ({
           label: loc.locationName,
           value: loc.locationID,
@@ -62,7 +62,7 @@ const FilterComp = ({
             Date
           </label>
           <Calendar
-            value={selectedDateRange}
+            value={selectedDate}
             onChange={(e) => setSelectedDate(e.value)}
             selectionMode="single"
             placeholder="Select Date"
@@ -133,11 +133,11 @@ const FilterComp = ({
         </div>
       )}
 
-      <div className="bg-slate-800 w-fit px-2 rounded text-white col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
+      <div className="bg-slate-800 w-fit px-2 rounded text-white col-span-1 md:col-span-2 lg:col-span-4 flex justify-end py-0 hover:bg-emerald-500 duration-300">
         <Button
-          label="Apply Filters"
+          label="Apply"
           icon="pi pi-filter"
-          className="px-1 py-1"
+          className="px-1 md:py-1 py-0 "
           onClick={handleFilterChange}
         />
       </div>
