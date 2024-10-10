@@ -44,18 +44,18 @@ const FilterComp = ({
 
   const handleFilterChange = () => {
     const filters = {
+      date: selectedDate,
       dateRange: selectedDateRange,
       location: selectedLocation,
       department: selectedDepartment,
       subcategory: selectedSubcategory,
-      date: selectedDate,
     };
 
     onFilterChange(filters);
   };
 
   return (
-    <div className="w-full flex md:grid md:grid-cols-6 lg:grid-cols-4 gap-4">
+    <div className="w-full flex flex-col md:grid md:grid-cols-6 lg:grid-cols-4 gap-4">
       {showDate && (
         <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700">
@@ -77,6 +77,7 @@ const FilterComp = ({
             Date Range
           </label>
           <Calendar
+            variant="filled"
             value={selectedDateRange}
             onChange={(e) => setSelectedDateRange(e.value)}
             selectionMode="range"

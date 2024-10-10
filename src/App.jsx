@@ -16,6 +16,10 @@ import DLiveSales from "./stacks/DLiveSales";
 import DAnalyzer from "./stacks/DAnalyzer";
 import Reports from "./pages/Reports";
 import DFootfall from "./stacks/DFootfall";
+import DailyFootFall from "./pages/DailyFootFall";
+import WeeklyFootFall from "./pages/WeeklyFootFall";
+import MonthlyFootFall from "./pages/MonthlyFootFall";
+import HourlyFootfall from "./pages/HourlyFootFall";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,6 +47,22 @@ function App() {
             <Route path="/dashboard/sales" element={<DLiveSales />} />
             <Route path="/dashboard/analyzer" element={<DAnalyzer />} />
             <Route path="/dashboard/footfall" element={<DFootfall />} />
+            <Route
+              path="/dashboard/footfall/hourly"
+              element={<HourlyFootfall />}
+            />
+            <Route
+              path="/dashboard/footfall/daily"
+              element={<DailyFootFall />}
+            />
+            <Route
+              path="/dashboard/footfall/weekly"
+              element={<WeeklyFootFall />}
+            />
+            <Route
+              path="/dashboard/footfall/monthly"
+              element={<MonthlyFootFall />}
+            />
             <Route path="/reports" element={<Reports />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" />} />
